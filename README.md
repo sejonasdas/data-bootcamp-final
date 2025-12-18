@@ -1,6 +1,6 @@
 # Forecasting U.S. Rental Affordability: A Time-Series Forecasting Analysis
 
-**Author:** sd5466@nyu.edu  
+**Author:** Sejona Sujit Das (sd5466) 
 **Data Bootcamp Final Project**
 
 ## Project Overview
