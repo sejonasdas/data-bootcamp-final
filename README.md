@@ -58,7 +58,7 @@ Seven modeling approaches were evaluated:
 |-------|-----------|------------------------|
 | Naive Forecast | $30.76 | -- |
 | Linear Regression | $15.03 | 51.1% |
-| **Ridge Regression** | **$14.37** | **53.3%** ⭐ |
+| **Ridge Regression** | **$14.37** | **53.3%** (Best) |
 | Random Forest | $25.12 | 18.3% |
 | XGBoost | $20.84 | 32.2% |
 | ARIMA | $85.33 (val) | Failed |
@@ -167,7 +167,7 @@ rental-affordability-forecasting/
 │   └── rental_affordability_forecasting.ipynb    # Main analysis notebook
 ├── outputs/
 │   ├── Rental_Forecasting_Final_Report.docx     # Written report
-│   └── Rental_Forecasting_Presentation.pptx      # 5-slide presentation
+│   └── Rental_Forecasting_Presentation.pptx     
 └── README.md                        
 ```
 
