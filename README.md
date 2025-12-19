@@ -1,213 +1,231 @@
-# Forecasting U.S. Rental Affordability: A Time-Series Forecasting Analysis
+# Forecasting U.S. Rental Affordability: Time-Series Analysis of High-Rent Metropolitan Markets
 
-**Author:** Sejona Sujit Das (sd5466) 
+**Author:** Sejona Sujit Das
 
-**Data Bootcamp Final Project**
+Data Science Bootcamp Final Project 
 
-## Project Overview
+---
 
-This project develops predictive models to forecast monthly rental prices across the top 20 U.S. metropolitan areas. Using Zillow Observed Rent Index data (2015-2025) combined with Federal Reserve economic indicators, we compare four forecasting approaches: Naïve baseline, Linear Regression, ARIMA, and XGBoost. The analysis demonstrates that Linear Regression with engineered lag features achieves the best performance (RMSE $15.03, representing 51% improvement over baseline), outperforming both traditional statistical methods and modern machine learning approaches.
+## 1. Introduction
 
-### Research Question
+This project develops predictive models to forecast monthly rental prices across the top 20 highest-rent U.S. metropolitan areas through 2026. The core research question: **Can we build accurate forecasting models that substantially outperform naive baseline predictions?**
 
-Can we accurately forecast monthly rent levels across U.S. metros through 2026, and which modeling approaches best capture recent structural changes in the rental market?
+Seven modeling approaches were evaluated:
+- Naive Forecast (Baseline)
+- Linear Regression
+- **Ridge Regression** (Best Model)
+- Random Forest
+- XGBoost
+- ARIMA
+- Ensemble Methods
 
-### Key Findings
+**Key Result**: Ridge Regression achieved **53.3% improvement** over baseline with Test RMSE of **$14.37**.
 
-- Linear Regression with lag features achieved best test set performance with RMSE of $15.03
-- Simple engineered features (3-month rolling average, 1-month lag) capture most predictive signal
-- XGBoost underperformed Linear Regression (RMSE $23.45) due to overfitting on limited data
-- ARIMA struggled with multi-step forecasting (validation RMSE $85.33)
-- Small resort markets are 3-5 times harder to forecast than large diversified metros
+---
 
+## 2. Data Description
 
-## Installation and Setup
+**Dataset**: 2,451 observations from Zillow Observed Rent Index (ZORI) combined with Federal Reserve Economic Data (FRED)
 
-### Prerequisites
+**Time Period**: January 2015 - November 2025
 
-- Python 3.8 or higher
-- Jupyter Notebook or Google Colab
-- FRED API key (free registration at https://fred.stlouisfed.org/docs/api/api_key.html)
+**Geographic Scope**: Top 20 highest-rent U.S. metropolitan areas, including:
+- California markets: San Jose, San Francisco, Los Angeles, San Diego
+- East Coast: New York, Boston, Bridgeport
+- Resort markets: Key West, Glenwood Springs, Heber
 
-### Installation Steps
-```bash
-# Clone repository
-git clone https://github.com/yourusername/rental-affordability-forecasting.git
-cd rental-affordability-forecasting
+**Data Splits**:
+- Training Set (2015-2023): 1,751 observations
+- Validation Set (2024): 240 observations
+- Test Set (2025): 220 observations
 
-# Install required packages
-pip install -r requirements.txt
+**Engineered Features** (11 total):
+- Lag features: 1, 3, 12 months
+- Rolling averages: 3, 6, 12 months
+- Growth rates: MoM, YoY
+- Temporal indicators: Month, Year, Quarter
 
-# Launch Jupyter Notebook
-jupyter notebook rental_affordability_forecasting.ipynb
-```
+![Rent Trends](figures/rent_trends_sample.png)
+*Historical rent trends for top 5 metros showing consistent upward trajectories with post-pandemic acceleration*
 
-### Requirements
-```
-pandas==2.0.3
-numpy==1.24.3
-matplotlib==3.7.2
-seaborn==0.12.2
-scikit-learn==1.3.0
-xgboost==1.7.6
-pmdarima==2.0.3
-fredapi==0.5.1
-```
+---
 
-## Data Sources
-
-### Zillow Observed Rent Index (ZORI)
-
-- **Source:** Zillow Research Data
-- **URL:** https://files.zillowstatic.com/research/public_csvs/zori/Metro_zori_uc_sfrcondomfr_sm_month.csv
-- **Coverage:** January 2015 - November 2025 (131 months)
-- **Description:** Monthly rent observations for U.S. metropolitan areas, capturing typical market rates for single-family homes, condos, and co-ops
-
-### Federal Reserve Economic Data (FRED)
-
-**Median Household Income (MEHOINUSA672N)**
-- **Source:** U.S. Census Bureau via FRED
-- **URL:** https://fred.stlouisfed.org/series/MEHOINUSA672N
-- **Frequency:** Annual
-- **Use:** Contextual economic indicator for affordability analysis
-
-**Consumer Price Index (CPIAUCSL)**
-- **Source:** Bureau of Labor Statistics via FRED
-- **URL:** https://fred.stlouisfed.org/series/CPIAUCSL
-- **Frequency:** Monthly
-- **Use:** Inflation adjustment and macroeconomic context
-
-### Geographic Scope
-
-Analysis focuses on the top 20 U.S. metropolitan areas by average rent:
-
-1. San Jose, CA - $2,986
-2. Key West, FL - $2,901
-3. Santa Cruz, CA - $2,796
-4. Heber, UT - $2,785
-5. San Francisco, CA - $2,739
-6. New York, NY - $2,659
-7. Napa, CA - $2,562
-8. Santa Maria, CA - $2,520
-9. Glenwood Springs, CO - $2,459
-10. Boston, MA - $2,448
-11. Los Angeles, CA - $2,411
-12. Oxnard, CA - $2,386
-13. San Diego, CA - $2,336
-14. Barnstable Town, MA - $2,296
-15. Urban Honolulu, HI - $2,282
-16. Santa Rosa, CA - $2,251
-17. San Luis Obispo, CA - $2,195
-18. Salinas, CA - $2,187
-19. Bridgeport, CT - $2,158
-20. Naples, FL - $2,130
-
-## Methodology
-
-### Feature Engineering
-
-Eleven temporal features were engineered across four categories:
-
-**Time Features:** Month, Year_Num, Quarter  
-**Lag Features:** Rent_Lag_1, Rent_Lag_3, Rent_Lag_12  
-**Rolling Averages:** Rent_Roll_3, Rent_Roll_6, Rent_Roll_12  
-**Growth Rates:** Rent_Growth_MoM, Rent_Growth_YoY
-
-### Train/Validation/Test Split
-
-- **Training:** January 2015 - December 2023 (1,751 observations)
-- **Validation:** January 2024 - December 2024 (240 observations)
-- **Test:** January 2025 - November 2025 (220 observations)
+## 3. Models and Methods
 
 ### Models Evaluated
 
-1. **Naive Forecast** - Persistence model establishing baseline performance
-2. **Linear Regression** - Multiple regression with time and lag features
-3. **ARIMA** - Statistical time-series model with automatic parameter selection
-4. **XGBoost** - Gradient boosting with hyperparameter tuning via RandomizedSearchCV
+| Model | Test RMSE | Improvement vs Baseline |
+|-------|-----------|------------------------|
+| Naive Forecast | $30.76 | -- |
+| Linear Regression | $15.03 | 51.1% |
+| **Ridge Regression** | **$14.37** | **53.3%** ⭐ |
+| Random Forest | $25.12 | 18.3% |
+| XGBoost | $20.84 | 32.2% |
+| ARIMA | $85.33 (val) | Failed |
+| Ensemble | $17.62 | 42.7% |
 
-### Evaluation Metrics
+**Winner**: Ridge Regression with L2 regularization (α = 0.1)
 
-- **RMSE (Root Mean Squared Error)** - Primary metric, in dollars
-- **MAE (Mean Absolute Error)** - Average absolute error, in dollars
-- **MAPE (Mean Absolute Percentage Error)** - Scale-independent percentage error
+![Model Comparison](figures/model_comparison_comprehensive.png)
+*Ridge Regression achieves lowest error, outperforming complex ML models*
 
-## Results
+---
 
-### Model Performance Comparison
+## 4. Results and Interpretation
 
-| Model | Test RMSE ($) | Test MAE ($) | Test MAPE (%) | vs. Baseline |
-|-------|---------------|--------------|---------------|--------------|
-| Naive Forecast | 30.76 | 20.33 | 0.67 | - |
-| Linear Regression | 15.03 | 9.42 | 0.31 | +51.1% |
-| XGBoost | 23.45 | 13.00 | 0.41 | +23.8% |
-| ARIMA | Not evaluated* | Not evaluated* | Not evaluated* | - |
+### Key Finding #1: Simple Models Outperform Complex Alternatives
 
-*ARIMA not evaluated on test set due to poor validation performance (RMSE $85.33)
+Ridge and Linear Regression consistently beat Random Forest, XGBoost, and Ensemble methods because rental price dynamics are **predominantly linear**. Complex models added noise rather than signal.
 
-### Feature Importance
+### Key Finding #2: Feature Importance
 
-Analysis revealed that the 3-month rolling average (Rent_Roll_3) accounts for 72.6% of the predictive signal in XGBoost, followed by 1-month lag (Rent_Lag_1) at 24.2%. Time features, longer lags, and growth rates contributed minimally, suggesting that recent rent levels dominate forecasting accuracy.
+Just **2 features explain 97% of predictive power**:
+- **Rent_Roll_3** (3-month rolling average): 72%
+- **Rent_Lag_1** (previous month): 25%
+- All other features: <3%
 
-### Regional Performance
+![Feature Importance](figures/feature_importance_comparison.png)
+*Consistent feature rankings across XGBoost, Random Forest, and Linear Regression*
 
-Metro-level analysis revealed substantial heterogeneity in forecast difficulty:
+### Key Finding #3: Geographic Heterogeneity
 
-**Most Difficult to Forecast:**
-- Glenwood Springs, CO (RMSE: $42.17)
-- Key West, FL (RMSE: $26.58)
-- Heber, UT (RMSE: $22.18)
+Forecast accuracy varies dramatically by metro:
 
-**Easiest to Forecast:**
-- Napa, CA (RMSE: $7.13)
-- Salinas, CA (RMSE: $7.75)
-- San Luis Obispo, CA (RMSE: $7.82)
+**Easiest Markets**:
+- San Francisco, CA: $2.95 RMSE
+- San Diego, CA: $3.48 RMSE
+- Los Angeles, CA: $5.44 RMSE
 
-Small resort and amenity-driven markets exhibit significantly higher volatility than large diversified metropolitan areas.
+**Hardest Markets**:
+- Glenwood Springs, CO: $41.99 RMSE
+- Key West, FL: $26.57 RMSE
+- Heber, UT: $22.29 RMSE
 
-## Key Insights
+Large, mature markets with diverse economies are highly predictable. Small resort markets with tourism dependence remain challenging.
 
-### Model Complexity vs. Performance
+![Best vs Worst](figures/best_worst_metro_comparison.png)
+*San Francisco shows tight model predictions vs Glenwood Springs' extreme volatility*
 
-Linear Regression outperformed both ARIMA and XGBoost despite being the simplest approach. This demonstrates that model complexity should match data complexity. With limited observations (1,751 training samples) and strong linear autocorrelation in rent data, simple models prove more robust than complex alternatives that risk overfitting.
+### Key Finding #4: Prediction Accuracy
 
-### Feature Engineering Over Algorithm Selection
+Ridge Regression's **$14.37 RMSE** enables:
+- 95% prediction intervals: **±$28**
+- Typical errors: **0.5-0.6%** of rent levels
+- Reliable financial planning for stakeholders
 
-The most important modeling decision was feature design rather than algorithm choice. The 3-month rolling average alone captured most predictive signal. This emphasizes that domain knowledge in feature engineering often matters more than algorithmic sophistication.
+![Actual vs Predicted](figures/actual_vs_predicted_all_models.png)
+*Ridge, Linear Regression, and XGBoost show tight clustering around perfect prediction line*
 
-### Practical Applications
+---
 
-The Linear Regression model achieves forecast accuracy suitable for multiple applications:
+## 5. Conclusion and Next Steps
 
-- **Property managers** can set monthly rents within $15 confidence intervals
-- **Renters** can budget for housing costs with 95% confidence intervals of approximately ±$30
-- **Policymakers** can identify metros at risk of affordability decline
-- **Investors** can evaluate acquisition opportunities with data-driven rent projections
+### Summary
 
-## Limitations
+This project successfully developed accurate rental forecasting models with **Ridge Regression achieving 53.3% improvement over baseline** (Test RMSE: $14.37).
 
-1. **Limited geographic coverage** - Analysis restricted to top 20 metros, excluding mid-size and lower-cost markets
-2. **Absence of external variables** - Model excludes housing supply, unemployment, wage growth, and policy variables
-3. **Short test period** - 11-month test set insufficient for full business cycle assessment
-4. **Distribution shift** - Higher test RMSE suggests 2025 dynamics differ from historical patterns
-5. **No uncertainty quantification** - Point forecasts provided without confidence intervals
+**Key Takeaways**:
+1. Simple regularized linear models outperform complex ML approaches
+2. Recent price history (3-month avg + lag) dominates predictions (97% of variance)
+3. Geographic variation substantial: $2.95 (SF) vs $41.99 (Glenwood Springs) RMSE
+4. Tight prediction intervals (±$28) enable reliable financial planning
 
-## Future Work
+### Real-World Applications
 
-1. **Expand geographic coverage** to all U.S. metros with sufficient data
-2. **Incorporate external economic indicators** including housing supply, labor market conditions, and policy variables
-3. **Develop confidence intervals** through parametric methods, bootstrap resampling, or quantile regression
-4. **Implement ensemble forecasting** combining predictions from multiple models
-5. **Conduct walk-forward validation** across multiple test windows
-6. **Develop metro-specific models** or hierarchical approaches to capture regional heterogeneity
-7. **Build interactive dashboard** for stakeholder access
-8. **Implement automated retraining pipeline** with drift detection
+- **Property Managers**: Optimize rental pricing and revenue forecasts
+- **Investors**: Improve acquisition valuations with quantified uncertainty
+- **Policymakers**: Project affordability challenges and plan interventions
 
-## References
+### Limitations
+
+- Assumes continuation of historical patterns (fails during unprecedented disruptions)
+- Focus on high-rent markets (>$2,100/month) limits generalizability
+- Metro-level aggregation masks neighborhood-specific dynamics
+
+### Future Research Directions
+
+1. Incorporate local employment growth, construction permits, mortgage rates
+2. Develop metro-specific hierarchical models
+3. Implement multi-horizon direct forecasting (3, 6, 12 months)
+4. Add regime-switching models for structural break detection
+5. Extend to mid-tier and low-rent markets
+
+### Recommendation
+
+**Deploy Ridge Regression (α=0.1)** as production forecasting model for high-rent markets. Monitor residuals monthly for regime change detection. This simple, interpretable model provides optimal accuracy while remaining easy to maintain and explain.
+
+---
+
+## Project Structure
+```
+rental-affordability-forecasting/
+├── data/
+│   ├── raw/                          # Original ZORI and FRED data
+│   └── processed/                    # Cleaned datasets with engineered features
+├── figures/                          # All visualizations 
+├── notebooks/
+│   └── rental_affordability_forecasting.ipynb    # Main analysis notebook
+├── outputs/
+│   ├── Rental_Forecasting_Final_Report.docx     # Written report
+│   └── Rental_Forecasting_Presentation.pptx      # 5-slide presentation
+└── README.md                        
+```
+
+
+---
+
+## How to Run
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/rental-affordability-forecasting.git
+cd rental-affordability-forecasting
+```
+
+2. Install dependencies:
+```bash
+pip install pandas numpy matplotlib seaborn scikit-learn xgboost statsmodels
+```
+
+3. Run the Jupyter notebook:
+```bash
+jupyter notebook notebooks/rental_affordability_forecasting.ipynb
+```
+
+---
+
+## Key Results Summary
+
+| Metric | Value |
+|--------|-------|
+| Best Model | Ridge Regression (α=0.1) |
+| Test RMSE | $14.37 |
+| Improvement over Baseline | 53.3% |
+| R² Score | 0.997 |
+| 95% Confidence Interval | ±$28 |
+| Top Feature | Rent_Roll_3 (72% importance) |
+| Most Predictable Metro | San Francisco ($2.95 RMSE) |
+| Least Predictable Metro | Glenwood Springs ($41.99 RMSE) |
+
+---
+
+## Sources
 
 ### Data Sources
 
-Federal Reserve Bank of St. Louis. (2025). Federal Reserve Economic Data (FRED). Retrieved from https://fred.stlouisfed.org/
+1. **Zillow Observed Rent Index (ZORI)**
+   - Source: Zillow Research Data
+   - URL: https://www.zillow.com/research/data/
+   - Description: Smoothed, monthly median rent estimates for single-family residences, condos, and co-ops
+   - Coverage: 2015-2025, metro-level aggregation
 
-Zillow Research. (2025). Zillow Observed Rent Index (ZORI). Retrieved from https://www.zillow.com/research/data/
+2. **Federal Reserve Economic Data (FRED)**
+   - Source: Federal Reserve Bank of St. Louis
+   - URL: https://fred.stlouisfed.org/
+   - Series Used:
+     - CPIAUCSL: Consumer Price Index for All Urban Consumers
+     - MEHOINUSA672N: Median Household Income in the United States
+   - Coverage: Monthly CPI (2015-2025), Annual Income (2015-2023)
+
+
 
